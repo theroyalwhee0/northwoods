@@ -1,0 +1,37 @@
+{
+  "name": "@theroyalwhee0/northwoods",
+  "version": "0.0.1",
+  "description": "A lightweight Bunyan-like browser logging library",
+  "main": "index.js",
+  "author": "Adam Mill <theroyalwhee0@gmail.com>",
+  "license": "Apache-2.0",
+  "keywords": [
+    "bunyan",
+    "logging"
+  ],
+  "scripts": {
+		"test": "mocha ${npm_package_config_testPath}",
+		"test-watch": "mocha ${npm_package_config_testPath} --bail --watch --reporter dot"
+  },
+  "config": {
+    "testPath": "test/**/*Spec.js",
+    "docsPath": "docs/"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "homepage": "https://github.com/theroyalwhee0/northwoods#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theroyalwhee0/northwoods.git"
+  },
+  "bugs": {
+    "url": "https://github.com/theroyalwhee0/northwoods/issues"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "expect.js": "^0.3.1",
+    "mocha": "^3.0.2",
+    "sinon": "^1.17.6"
+  }
+}
