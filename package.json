@@ -1,7 +1,7 @@
 {
   "name": "@theroyalwhee0/northwoods",
   "version": "0.0.1",
-  "description": "A lightweight Bunyan-like browser logging library",
+  "description": "A lightweight Bunyan-like browser logging library.",
   "main": "index.js",
   "author": "Adam Mill <theroyalwhee0@gmail.com>",
   "license": "Apache-2.0",

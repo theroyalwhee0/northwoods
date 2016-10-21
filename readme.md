@@ -1,5 +1,5 @@
-# Northwoods, A lightweight Bunyan-like browser logging library
-'Northwoods' is a Javascript logging library with a [Bunyan-like](https://github.com/trentm/node-bunyan) API. It has no dependencies.
+# Northwoods: a lightweight Bunyan-like browser logging library.
+Northwoods is a Javascript logging library with a [Bunyan-like](https://github.com/trentm/node-bunyan) API. It has no dependencies.
 
 # Installation
 npm --save install @theroyalwhee0/northwoods
