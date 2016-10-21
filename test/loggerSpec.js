@@ -88,14 +88,30 @@ describe('Northwoods', () => {
 				expect(Northwoods.Logger.prototype.info.length).to.be(2);
 			});
 			it('should write info to log', () => {
-				const obj = { what: 'cat', when: 'now', where: 'tree' };
+				const obj = { what: 'cat?', when: 'now!', where: 'tree...' };
 				const msg = 'A cat in a tree!';
 				const log = new Northwoods.Logger({ name: 'test123' });
 				const spy = sinon.spy();
 				log._log = spy;
 				log.info(obj, msg);
 				expect(spy.calledOnce).to.be(true);
-				expect(spy.args[0]).to.be.eql([ Northwoods.INFO, obj, msg ]);
+				expect(spy.args[0]).to.be.eql([ Northwoods.INFO, [ obj, msg ] ]);
+			});
+			it('should write log with string first argument', () => {
+				const msg = 'A cat in a tree! %d %s';
+				const log = new Northwoods.Logger({ name: 'test123', extra: 'catnip' });
+				const spy = sinon.spy();
+				log._write = spy;
+				log.info(msg, 2, 'B');
+				expect(spy.calledOnce).to.be(true);
+				expect(spy.args.length).to.be(1);
+				expect(spy.args[0].length).to.be(1);
+				const arg0 = spy.args[0][0];
+				expect(arg0).to.be.an('object');
+				expect(arg0.name).to.be('test123');
+				expect(arg0.v).to.be(0);
+				expect(arg0.msg).to.be('A cat in a tree! 2 B');
+				expect(arg0.extra).to.be('catnip');
 			});
 		});
 		describe('internal functions', () => {
@@ -158,7 +174,7 @@ describe('Northwoods', () => {
 					const obj = { what: 'cat', when: 'before', where: 'bookshelf' };
 					const msg = 'How did the cat get up there?';
 					const log = new Northwoods.Logger({ name: 'feline' });
-					const rec = log._record(30, obj, msg);
+					const rec = log._record(30, [ obj, msg ]);
 					const keys = Object.keys(rec);
 					expect(rec).to.be.an('object');
 					expect(rec.pid).to.be(Northwoods.PID);
@@ -168,14 +184,14 @@ describe('Northwoods', () => {
 					expect(rec.hostname).to.be.a('string');
 					expect(rec.msg).to.be('How did the cat get up there?');
 					expect(rec.time).to.match(/^20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/);
-					expect(keys).to.eql([ 'name', 'hostname', 'pid', 'level', 'msg', 'time', 'v' ]);
+					expect(keys).to.eql([ 'name', 'hostname', 'pid', 'level', 'what', 'when', 'where', 'msg', 'time', 'v' ]);
 				});
 			});
 			it('should create record given object and formatted message', () => {
 				const obj = { what: 'mama-cat', when: 'after', where: 'kitchen' };
 				const msg = 'Really? How did he get up there? %s %d times and I\'ve never seen it. %s';
 				const log = new Northwoods.Logger({ name: 'housecat' });
-				const rec = log._record(30, obj, msg, 'Did you see?', 12, 'Sigh.');
+				const rec = log._record(30, [ obj, msg, 'Did you see?', 12, 'Sigh.' ]);
 				const keys = Object.keys(rec);
 				expect(rec).to.be.an('object');
 				expect(rec.pid).to.be(Northwoods.PID);
@@ -185,7 +201,7 @@ describe('Northwoods', () => {
 				expect(rec.hostname).to.be.a('string');
 				expect(rec.msg).to.be('Really? How did he get up there? Did you see? 12 times and I\'ve never seen it. Sigh.');
 				expect(rec.time).to.match(/^20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/);
-				expect(keys).to.eql([ 'name', 'hostname', 'pid', 'level', 'msg', 'time', 'v' ]);
+				expect(keys).to.eql([ 'name', 'hostname', 'pid', 'level', 'what', 'when', 'where', 'msg', 'time', 'v' ]);
 			});
 		});
 	});

@@ -1,6 +1,6 @@
 /**
  * @file Northwoods, A lightweight Bunyan-like browser logging library.
- * @version 0.0.1
+ * @version 0.0.2
  * @author Adam Mill
  * @copyright Copyright 2016 Adam Mill
  * @license Apache-2.0
@@ -18,7 +18,7 @@ var Northwoods = { };
  * The version of the library.
  * @type {string}
  */
-Northwoods.VERSION = '0.0.1';
+Northwoods.VERSION = '0.0.2';
 
 /**
  * The version of the log format.
@@ -255,26 +255,33 @@ Logger.prototype._format = function _format(value, params) {
  * @param  {String} msg   The message to log.
  * @return {Object}       The record.
  */
-Logger.prototype._record = function _record(level, obj, msg) {
-	var params = Array.from(arguments);
-	if(typeof obj === 'string' && typeof msg === 'undefined') {
-		msg = obj;
-		obj = undefined;
-		if(params.length > 2) {
-			params = params.slice(2);
-		}
-	} else {
-		if(params.length > 3) {
-			params = params.slice(3);
-		}
-	}
+Logger.prototype._record = function _record(level, params) {
 	var rec = {
 		name: this.fields.name,
 		hostname: getHostName(),
 		pid: Northwoods.PID,
 		level: level
 	};
-	rec.msg = this._format(msg, params);
+	var obj;
+	var msg = '';
+	if(params.length) {
+		if(params[0] && typeof params[0] === 'object') {
+			// If first is object...
+			obj = params[0];
+		} else if(typeof params[0] === 'string') {
+			// If first is string...
+			msg = params[0];
+			params = params.slice(1);
+		}
+		if(obj && params.length > 1 && typeof params[1] === 'string') {
+			// If first was object and second is string...
+			msg = params[1];
+			params = params.slice(2);
+		}
+
+	}
+	Object.assign(rec, this.fields, obj);
+	rec.msg = msg ? this._format(msg, params) : '';
 	rec.time = this._now();
 	rec.v = Northwoods.LOG_VERSION;
 	return rec;
@@ -284,27 +291,27 @@ Logger.prototype._write = function _write(rec) {
 		stream.stream.write(rec);
 	});
 };
-Logger.prototype._log = function _log(level, obj, msg) {
-	var rec = this._record(level, obj, msg);
+Logger.prototype._log = function _log(level, params) {
+	var rec = this._record(level, params);
 	this._write(rec);
 };
 Logger.prototype.trace = function trace(obj, msg) {
-	return this._log(TRACE, obj, msg);
+	return this._log(TRACE, Array.from(arguments));
 };
 Logger.prototype.debug = function debug(obj, msg) {
-	return this._log(DEBUG, obj, msg);
+	return this._log(DEBUG, Array.from(arguments));
 };
 Logger.prototype.info = function info(obj, msg) {
-	return this._log(INFO, obj, msg);
+	return this._log(INFO, Array.from(arguments));
 };
 Logger.prototype.warn = function warn(obj, msg) {
-	return this._log(WARN, obj, msg);
+	return this._log(WARN, Array.from(arguments));
 };
 Logger.prototype.error = function error(obj, msg) {
-	return this._log(ERROR, obj, msg);
+	return this._log(ERROR, Array.from(arguments));
 };
 Logger.prototype.fatal = function fatal(obj, msg) {
-	return this._log(FATAL, obj, msg);
+	return this._log(FATAL, Array.from(arguments));
 };
 
 /**

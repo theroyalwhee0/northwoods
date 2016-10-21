@@ -18,6 +18,10 @@ The [tests](https://github.com/theroyalwhee0/northwoods/tree/master/test) can be
 - npm test
 - npm run test-watch
 
+# History
+- v0.0.2 Bug fixes. Unstable.
+- v0.0.1 Initial release. Work in progress.
+
 # Legal & License
 Copyright 2016 Adam Mill
 
