@@ -132,9 +132,26 @@ describe('Northwoods', () => {
 			      stream: new MockRawStream()
 					});
 					expect(log.streams.length).to.be(1);
-					const results = log._write({ test: 1 });
+					log._write({ test: 1, level: 30 });
 					expect(writeSpy.calledOnce).to.be(true);
 				});
+			});
+			it('should skip underlying write log if less than log level', () => {
+				function MockRawStream() { }
+				const writeSpy = sinon.spy();
+				MockRawStream.prototype.write = writeSpy;
+				const log = new Northwoods.Logger({ name: 'test1' });
+				log._write = sinon.spy(Northwoods.Logger.prototype._write);
+				log.streams = [ ];
+				log.addStream({
+					type: 'raw',
+					stream: new MockRawStream()
+				});
+				expect(log.streams.length).to.be(1);
+				log._write({ test: 1, level: 20 });
+				expect(writeSpy.calledOnce).to.be(false);
+				log._write({ test: 1, level: 30 });
+				expect(writeSpy.calledOnce).to.be(true);
 			});
 			describe('_now()', () => {
 				it('should be a function', () => {

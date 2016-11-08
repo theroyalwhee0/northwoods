@@ -19,6 +19,7 @@ The [tests](https://github.com/theroyalwhee0/northwoods/tree/master/test) can be
 - npm run test-watch
 
 # History
+- v0.0.3 Fix bug where log level was being ignored during write.
 - v0.0.2 Bug fixes. Unstable.
 - v0.0.1 Initial release. Work in progress.
 

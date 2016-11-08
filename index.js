@@ -1,6 +1,6 @@
 /**
  * @file Northwoods, A lightweight Bunyan-like browser logging library.
- * @version 0.0.2
+ * @version 0.0.3
  * @author Adam Mill
  * @copyright Copyright 2016 Adam Mill
  * @license Apache-2.0
@@ -18,7 +18,7 @@ var Northwoods = { };
  * The version of the library.
  * @type {string}
  */
-Northwoods.VERSION = '0.0.2';
+Northwoods.VERSION = '0.0.3';
 
 /**
  * The version of the log format.
@@ -287,9 +287,11 @@ Logger.prototype._record = function _record(level, params) {
 	return rec;
 };
 Logger.prototype._write = function _write(rec) {
-	this.streams.forEach(stream => {
-		stream.stream.write(rec);
-	});
+	if(rec.level >= this._level) {
+		this.streams.forEach(stream => {
+			stream.stream.write(rec);
+		});
+	}
 };
 Logger.prototype._log = function _log(level, params) {
 	var rec = this._record(level, params);
@@ -367,7 +369,7 @@ function ConsoleFormattedRawStream() {
 		? global.console
 		: false;
 }
-ConsoleFormattedRawStream.DATAFORMAT = '\u2009·%o';
+ConsoleFormattedRawStream.DATAFORMAT = ' %o';
 ConsoleFormattedRawStream.REMOVEKEYS = [ 'name', 'hostname', 'pid', 'level', 'msg', 'time', 'v' ];
 ConsoleFormattedRawStream.prototype.write = function write(rec) {
 	if(!this._console) { return; }

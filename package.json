@@ -1,6 +1,6 @@
 {
   "name": "@theroyalwhee0/northwoods",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A lightweight Bunyan-like browser logging library.",
   "main": "index.js",
   "author": "Adam Mill <theroyalwhee0@gmail.com>",
