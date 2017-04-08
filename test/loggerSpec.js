@@ -11,6 +11,13 @@ const sinon = require('sinon');
 const Northwoods = require('../index');
 
 /**
+ * Mock Stream Type.
+ */
+const MockStreamType = sinon.spy(function MockStreamType() { })
+MockStreamType.prototype.write = sinon.spy(function mockWrite() { });
+Northwoods.setDefaultStreamType(MockStreamType);
+
+/**
  * Tests.
  */
 describe('Northwoods', () => {
@@ -82,6 +89,23 @@ describe('Northwoods', () => {
 				}).to.throwException(/child cannot set logger name/i);
 			});
 		});
+		describe('level()', () => {
+			it('should be a function', () => {
+				expect(Northwoods.Logger.prototype.level).to.be.a('function');
+				expect(Northwoods.Logger.prototype.level.length).to.be(1);
+			});
+			it('should be able to get defaulted log level', () => {
+				const log = new Northwoods.Logger({ name: 'test949' });
+				const results = log.level();
+				expect(results).to.be(Northwoods.INFO)
+			});
+			it('should be able to set log level', () => {
+				const log = new Northwoods.Logger({ name: 'test949' });
+				expect(log._level).to.be(Northwoods.INFO);
+				log.level('debug');
+				expect(log._level).to.be(Northwoods.DEBUG);
+			});
+		});
 		describe('info()', () => {
 			it('should be a function', () => {
 				expect(Northwoods.Logger.prototype.info).to.be.a('function');
@@ -113,6 +137,22 @@ describe('Northwoods', () => {
 				expect(arg0.msg).to.be('A cat in a tree! 2 B');
 				expect(arg0.extra).to.be('catnip');
 			});
+			it('should write an Error to log', () => {
+				const err = new Error('This should be treated as "err".');
+				const msg = 'A rat in the pantry!';
+				const log = new Northwoods.Logger({ name: 'test456' });
+				const spy = sinon.spy();
+				log._log = spy;
+				log.info(err, msg);
+				expect(spy.calledOnce).to.be(true);
+				expect(spy.args.length).to.be(1);
+				expect(spy.args[0].length).to.be(2);
+				expect(spy.args[0][0]).to.be(Northwoods.INFO);
+				expect(spy.args[0][1]).to.be.an('array');
+				expect(spy.args[0][1].length).to.be(2);
+				expect(spy.args[0][1][0]).to.be(err);
+				expect(spy.args[0][1][1]).to.be(msg);
+			});
 		});
 		describe('internal functions', () => {
 			describe('_write', () => {
@@ -121,15 +161,15 @@ describe('Northwoods', () => {
 					expect(Northwoods.Logger.prototype._write.length).to.be(1);
 				});
 				it('should pass write though to underlying stream', () => {
-					function MockRawStream() { }
+					function MockTestStream() { }
 					const writeSpy = sinon.spy();
-					MockRawStream.prototype.write = writeSpy;
+					MockTestStream.prototype.write = writeSpy;
 					const log = new Northwoods.Logger({ name: 'test1' });
 					log._write = sinon.spy(Northwoods.Logger.prototype._write);
 					log.streams = [ ];
 					log.addStream({
 			      type: 'raw',
-			      stream: new MockRawStream()
+			      stream: new MockTestStream()
 					});
 					expect(log.streams.length).to.be(1);
 					log._write({ test: 1, level: 30 });
@@ -137,7 +177,7 @@ describe('Northwoods', () => {
 				});
 			});
 			it('should skip underlying write log if less than log level', () => {
-				function MockRawStream() { }
+				const MockRawStream = function MockRawStream() { };
 				const writeSpy = sinon.spy();
 				MockRawStream.prototype.write = writeSpy;
 				const log = new Northwoods.Logger({ name: 'test1' });

@@ -1,8 +1,8 @@
 /**
  * @file Northwoods, A lightweight Bunyan-like browser logging library.
- * @version 0.0.3
+ * @version 0.0.4
  * @author Adam Mill
- * @copyright Copyright 2016 Adam Mill
+ * @copyright Copyright 2016-2017 Adam Mill
  * @license Apache-2.0
  * REF: https://github.com/trentm/node-bunyan
  */
@@ -12,13 +12,13 @@
  * The Northwoods namespace.
  * @namespace Northwoods
  */
-var Northwoods = { };
+const Northwoods = { };
 
 /**
  * The version of the library.
  * @type {string}
  */
-Northwoods.VERSION = '0.0.3';
+Northwoods.VERSION = '0.0.4';
 
 /**
  * The version of the log format.
@@ -35,12 +35,12 @@ Northwoods.PID = 0;
 /**
  * Log Levels.
  */
-var TRACE	= 10;
-var DEBUG	= 20;
-var INFO	= 30;
-var WARN	= 40;
-var ERROR	= 50;
-var FATAL	= 60;
+const TRACE	= 10;
+const DEBUG	= 20;
+const INFO	= 30;
+const WARN	= 40;
+const ERROR	= 50;
+const FATAL	= 60;
 Northwoods.TRACE = TRACE;
 Northwoods.DEBUG = DEBUG;
 Northwoods.INFO = INFO;
@@ -134,9 +134,12 @@ var Logger = Northwoods.Logger = function Logger(options, childOptions) {
 	}
 	this._level = Northwoods.resolveLevel(options.level || (parent && parent._level) || 'info');
 	if(!this.streams.length) {
+    if(!Northwoods._defaultStreamType) {
+      throw new Error('Must setup default stream type if not specifying stream type.')
+    }
 		this.addStream({
       type: 'raw',
-      stream: new Northwoods.streamTypes.default()
+      stream: new Northwoods._defaultStreamType()
 		});
 	}
 	const fields = Object.assign({ }, parent && parent.fields, options);
@@ -280,11 +283,21 @@ Logger.prototype._record = function _record(level, params) {
 		}
 
 	}
+  if(obj instanceof Error) {
+    obj = { err: obj };
+  }
 	Object.assign(rec, this.fields, obj);
 	rec.msg = msg ? this._format(msg, params) : '';
 	rec.time = this._now();
 	rec.v = Northwoods.LOG_VERSION;
 	return rec;
+};
+Logger.prototype.level = function level(level) {
+  if(arguments.length === 0) {
+    return this._level;
+  } else {
+    this._level = Northwoods.resolveLevel(level || 'info');
+  }
 };
 Logger.prototype._write = function _write(rec) {
 	if(rec.level >= this._level) {
@@ -317,101 +330,13 @@ Logger.prototype.fatal = function fatal(obj, msg) {
 };
 
 /**
- * ConsoleObjectRawStream
- */
-function ConsoleObjectRawStream() {
-	this._console = global.console && typeof global.console.info === 'function'
-		? global.console : false;
-}
-ConsoleObjectRawStream.prototype.write = function write(rec) {
-	if(!this._console) { return; }
-	rec = rec || { };
-	const level = rec && rec.level;
-	if(level <= DEBUG) { // Includes TRACE
-		this._console.debug(rec);
-	} else if(level <= INFO) {
-		this._console.info(rec);
-	} else if(level <= WARN) {
-		this._console.warn(rec);
-	} else { // Includes ERROR & FATAL
-		this._console.error(rec);
-	}
-};
-
-/**
- * ConsoleSerializeRawStream
- */
-function ConsoleSerializeRawStream() {
-	this._console = global.console && typeof global.console.info === 'function'
-		? global.console : false;
-}
-ConsoleSerializeRawStream.prototype.write = function write(rec) {
-	if(!this._console) { return; }
-	rec = JSON.stringify(rec || { });
-	const level = rec && rec.level;
-	if(level <= DEBUG) { // Includes TRACE
-		this._console.debug(rec);
-	} else if(level <= INFO) {
-		this._console.info(rec);
-	} else if(level <= WARN) {
-		this._console.warn(rec);
-	} else { // Includes ERROR & FATAL
-		this._console.error(rec);
-	}
-};
-
-/**
- * ConsoleFormattedRawStream
- */
-function ConsoleFormattedRawStream() {
-	this._console = global.console
-		&& typeof global.console.info === 'function'
-		? global.console
-		: false;
-}
-ConsoleFormattedRawStream.DATAFORMAT = ' %o';
-ConsoleFormattedRawStream.REMOVEKEYS = [ 'name', 'hostname', 'pid', 'level', 'msg', 'time', 'v' ];
-ConsoleFormattedRawStream.prototype.write = function write(rec) {
-	if(!this._console) { return; }
-	rec = rec || { };
-	const level = rec.level;
-	const args = [ '%s', rec.msg || '' ];
-	let levelName;
-	if(level <= DEBUG) { // Includes TRACE
-		levelName = 'debug';
-	} else if(level <= INFO) {
-		levelName = 'info';
-	} else if(level <= WARN) {
-		levelName = 'warn';
-	} else { // Includes ERROR & FATAL
-		levelName = 'error';
-	}
-	// Remove all keys that don't need to be shown...
-	const data = Object.keys(rec)
-		.reduce((data, key) => {
-			if(!ConsoleFormattedRawStream.REMOVEKEYS.includes(key)) {
-				data[key] = rec[key];
-			}
-			return data;
-		}, { });
-	// If there is any data left after filtering...
-	if(Object.keys(data).length) {
-		args.push(data);
-		args[0] += ConsoleFormattedRawStream.DATAFORMAT;
-	}
-	this._console[levelName].apply(this._console, args);
-};
-
-/**
- * Stream types.
+ * Default stream type.
  * @type {Object}
  */
-Northwoods.streamTypes = {
-	ConsoleObjectRawStream,
-	ConsoleSerializeRawStream,
-	ConsoleFormattedRawStream
-};
-Northwoods.streamTypes.default = Northwoods.streamTypes.ConsoleFormattedRawStream;
+Northwoods._defaultStreamType = null;
+Northwoods.setDefaultStreamType = function setDefaultStreamType(value) {
+  Northwoods._defaultStreamType = value;
+}
 
 /**
  * Exports.
